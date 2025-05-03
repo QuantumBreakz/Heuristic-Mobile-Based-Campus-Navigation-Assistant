@@ -1,83 +1,171 @@
-# Campus Navigation Assistant
+# Module-4: Path Planning and Mobile Application
 
-A React Native mobile application that helps users navigate through campus by recognizing buildings from images and estimating their location.
+This module implements the mobile application interface and path planning functionality for the Campus Navigation Assistant.
 
 ## Features
 
-- Image capture using device camera
-- Building recognition and distance estimation
-- Interactive campus map with user position
-- Real-time location updates
+1. **User Interface**
+   - Interactive campus map
+   - Building directory
+   - Real-time navigation
+   - Settings and preferences
+   - User authentication
 
-## Setup Instructions
+2. **Path Planning**
+   - Optimal route calculation
+   - Real-time path updates
+   - Obstacle avoidance
+   - Multiple destination support
+
+3. **Integration**
+   - Landmark recognition integration
+   - Distance estimation integration
+   - Real-time camera feed processing
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- React Native CLI
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
+
+## Installation
 
 1. Install dependencies:
 ```bash
+cd Module-4
 npm install
 ```
 
-2. Start the development server:
+2. For iOS (macOS only):
 ```bash
-npm start
+cd ios
+pod install
+cd ..
 ```
 
-3. Run on iOS or Android:
+3. Configure environment variables:
 ```bash
-npm run ios
-# or
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+## Running the Application
+
+### Android
+```bash
 npm run android
 ```
 
-## Backend API Integration
-
-The app communicates with a backend server for image processing. Update the API endpoint in `components/ImageCapture.js`:
-
-```javascript
-const response = await axios.post('http://your-backend-api/process-image', {
-  image: base64Image,
-});
+### iOS (macOS only)
+```bash
+npm run ios
 ```
 
-### API Request Format
-```json
-{
-  "image": "base64_encoded_image_string"
-}
+## Project Structure
+
+```
+Module-4/
+├── src/
+│   ├── components/         # Reusable UI components
+│   ├── screens/           # Application screens
+│   ├── navigation/        # Navigation configuration
+│   ├── services/          # API and backend services
+│   ├── utils/             # Utility functions
+│   ├── assets/            # Images and other assets
+│   └── constants/         # App constants and themes
+├── android/               # Android-specific files
+├── ios/                   # iOS-specific files
+└── tests/                 # Test files
 ```
 
-### API Response Format
-```json
-{
-  "building": "Building Name",
-  "distance": 100,
-  "coordinates": {
-    "latitude": 37.7749,
-    "longitude": -122.4194
-  }
-}
+## Key Components
+
+### 1. MapView Component
+- Interactive campus map
+- Real-time location tracking
+- Path visualization
+- Building markers
+
+### 2. Navigation Service
+- Path calculation algorithms
+- Real-time updates
+- Obstacle detection
+- Multiple route options
+
+### 3. Building Directory
+- Search functionality
+- Building details
+- Quick navigation
+- Favorites management
+
+## API Integration
+
+The application integrates with several APIs:
+
+1. **Map Services**
+   - Campus map data
+   - Building coordinates
+   - Path network
+
+2. **Navigation Services**
+   - Route calculation
+   - Real-time updates
+   - Traffic information
+
+3. **User Services**
+   - Authentication
+   - Preferences
+   - History
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
 ```
 
-## Configuration
+## Building for Production
 
-1. Update the default map region in `components/MapView.js` with your campus coordinates:
-```javascript
-const defaultRegion = {
-  latitude: YOUR_CAMPUS_LATITUDE,
-  longitude: YOUR_CAMPUS_LONGITUDE,
-  latitudeDelta: 0.01,
-  longitudeDelta: 0.01,
-};
+### Android
+```bash
+cd android
+./gradlew assembleRelease
 ```
 
-## Dependencies
+### iOS (macOS only)
+```bash
+cd ios
+xcodebuild -workspace App.xcworkspace -scheme App -configuration Release
+```
 
-- React Native
-- Expo
-- React Native Maps
-- React Native Elements
-- Axios
-- Expo Camera
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Build Failures**
+   - Clear cache: `npm cache clean --force`
+   - Reinstall dependencies: `rm -rf node_modules && npm install`
+
+2. **Runtime Errors**
+   - Check environment variables
+   - Verify API endpoints
+   - Ensure proper permissions
+
+3. **Performance Issues**
+   - Optimize image assets
+   - Implement lazy loading
+   - Use proper caching
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details. 

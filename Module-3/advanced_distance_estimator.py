@@ -4,6 +4,8 @@ from scipy.spatial import distance
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 import json
+from model_utils import BuildingDetector
+from calibration_utils import CalibrationUtility
 
 @dataclass
 class ReferenceObject:
@@ -15,178 +17,127 @@ class ReferenceObject:
     confidence_threshold: float = 0.7
 
 class AdvancedDistanceEstimator:
-    def __init__(self, camera_params: dict, reference_objects: List[ReferenceObject]):
+    def __init__(self, calibration_util):
         """
-        Initialize the advanced distance estimator
-        :param camera_params: Dictionary containing camera parameters
-        :param reference_objects: List of known reference objects
-        """
-        self.camera_params = camera_params
-        self.reference_objects = reference_objects
-        self.error_correction = {
-            'tilt_correction': True,
-            'perspective_correction': True,
-            'lighting_correction': True
-        }
+        Initialize the advanced distance estimator.
         
-    def estimate_distance(self, 
-                         image: np.ndarray,
-                         method: str = 'size_based',
-                         use_multiple_references: bool = True) -> Dict:
+        Args:
+            calibration_util (CalibrationUtility): Calibrated camera utility
         """
-        Estimate distance using multiple methods and reference objects
-        :param image: Input image
-        :param method: 'size_based' or 'triangulation'
-        :param use_multiple_references: Whether to use multiple reference objects
-        :return: Dictionary containing distance estimates and confidence scores
+        self.calibration_util = calibration_util
+        self.building_detector = BuildingDetector()
+        
+    def estimate_distance(self, image, method='size_based', use_multiple_references=True):
         """
-        results = {
-            'distances': [],
-            'confidences': [],
-            'reference_objects': [],
-            'method_used': method
-        }
+        Estimate distance to buildings in the image.
+        
+        Args:
+            image (numpy.ndarray): Input image
+            method (str): Estimation method ('size_based' or 'triangulation')
+            use_multiple_references (bool): Whether to use multiple reference points
+            
+        Returns:
+            dict: Distance estimation results
+        """
+        # Detect buildings in the image
+        detection_results = self.building_detector.detect_building(image)
+        
+        if not self.building_detector.is_building(detection_results['building_name']):
+            return {
+                'success': False,
+                'error': 'No building detected in the image',
+                'building_name': detection_results['building_name']
+            }
+        
+        # Get building dimensions
+        dimensions = detection_results['dimensions']
         
         if method == 'size_based':
-            for ref_obj in self.reference_objects:
-                distance, confidence = self._size_based_estimation(image, ref_obj)
-                if confidence > ref_obj.confidence_threshold:
-                    results['distances'].append(distance)
-                    results['confidences'].append(confidence)
-                    results['reference_objects'].append(ref_obj.name)
-        
-        elif method == 'triangulation':
-            # This would require two images, handled separately
-            pass
-        
-        # Apply error correction
-        if self.error_correction['tilt_correction']:
-            results['distances'] = self._correct_tilt_error(results['distances'])
-        if self.error_correction['perspective_correction']:
-            results['distances'] = self._correct_perspective_error(results['distances'])
-        
-        # Calculate final distance
-        if results['distances']:
-            results['final_distance'] = np.average(
-                results['distances'],
-                weights=results['confidences']
-            )
-            results['confidence'] = np.mean(results['confidences'])
+            return self._estimate_distance_size_based(image, dimensions)
         else:
-            results['final_distance'] = None
-            results['confidence'] = 0.0
-            
-        return results
+            return self._estimate_distance_triangulation(image, dimensions)
     
-    def _size_based_estimation(self, 
-                             image: np.ndarray,
-                             ref_obj: ReferenceObject) -> Tuple[float, float]:
+    def _estimate_distance_size_based(self, image, dimensions):
         """
-        Perform size-based distance estimation with a single reference object
-        :param image: Input image
-        :param ref_obj: Reference object to use
-        :return: (distance, confidence)
-        """
-        # Detect object
-        if ref_obj.template is not None:
-            height_pixels, width_pixels, confidence = self._template_matching(
-                image, ref_obj.template
-            )
-        else:
-            height_pixels, width_pixels, confidence = self._detect_by_features(
-                image, ref_obj
-            )
+        Estimate distance using size-based method.
         
-        if confidence < ref_obj.confidence_threshold:
-            return float('inf'), 0.0
+        Args:
+            image (numpy.ndarray): Input image
+            dimensions (dict): Building dimensions
             
-        # Calculate distance
-        distance = (ref_obj.actual_height * self.camera_params['focal_length']) / height_pixels
+        Returns:
+            dict: Distance estimation results
+        """
+        # Get camera parameters
+        camera_matrix = self.calibration_util.camera_matrix
+        dist_coeffs = self.calibration_util.dist_coeffs
         
-        return distance, confidence
+        # Undistort image
+        undistorted_image = cv2.undistort(image, camera_matrix, dist_coeffs)
+        
+        # Get image dimensions
+        height, width = undistorted_image.shape[:2]
+        
+        # Calculate focal length in pixels
+        focal_length_px = camera_matrix[0, 0]
+        
+        # Calculate apparent height in pixels
+        # This is a simplified version - you might want to use more sophisticated
+        # methods to measure the apparent height in the image
+        apparent_height_px = height * 0.8  # Assuming building takes up 80% of image height
+        
+        # Calculate distance using similar triangles
+        distance = (dimensions['height'] * focal_length_px) / apparent_height_px
+        
+        return {
+            'success': True,
+            'distance': distance,
+            'building_height': dimensions['height'],
+            'apparent_height_px': apparent_height_px,
+            'focal_length_px': focal_length_px
+        }
     
-    def _template_matching(self, 
-                         image: np.ndarray,
-                         template: np.ndarray) -> Tuple[float, float, float]:
+    def _estimate_distance_triangulation(self, image, dimensions):
         """
-        Detect object using template matching
-        :param image: Input image
-        :param template: Template image
-        :return: (height_pixels, width_pixels, confidence)
-        """
-        result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        Estimate distance using triangulation method.
         
-        h, w = template.shape[:2]
-        return h, w, max_val
+        Args:
+            image (numpy.ndarray): Input image
+            dimensions (dict): Building dimensions
+            
+        Returns:
+            dict: Distance estimation results
+        """
+        # This is a placeholder for triangulation-based estimation
+        # You would need to implement the actual triangulation logic
+        # using multiple viewpoints or reference points
+        
+        return {
+            'success': False,
+            'error': 'Triangulation method not implemented yet',
+            'building_name': dimensions['name']
+        }
     
-    def _detect_by_features(self, 
-                          image: np.ndarray,
-                          ref_obj: ReferenceObject) -> Tuple[float, float, float]:
+    def _correct_distance(self, distance, confidence):
         """
-        Detect object using feature matching
-        :param image: Input image
-        :param ref_obj: Reference object
-        :return: (height_pixels, width_pixels, confidence)
-        """
-        # Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        Apply error correction to the estimated distance.
         
-        # Apply adaptive thresholding
-        thresh = cv2.adaptiveThreshold(
-            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-            cv2.THRESH_BINARY, 11, 2
-        )
-        
-        # Find contours
-        contours, _ = cv2.findContours(
-            thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
-        
-        if not contours:
-            return 0, 0, 0.0
+        Args:
+            distance (float): Estimated distance
+            confidence (float): Detection confidence
             
-        # Find the most likely contour based on aspect ratio
-        best_contour = None
-        best_confidence = 0.0
-        expected_ratio = ref_obj.actual_width / ref_obj.actual_height
+        Returns:
+            float: Corrected distance
+        """
+        # Apply confidence-based correction
+        corrected_distance = distance * (1.0 + (1.0 - confidence) * 0.1)
         
-        for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            ratio = w / h
-            
-            # Calculate confidence based on aspect ratio similarity
-            confidence = 1.0 - min(abs(ratio - expected_ratio) / expected_ratio, 1.0)
-            
-            if confidence > best_confidence:
-                best_contour = contour
-                best_confidence = confidence
+        # Apply quadratic correction for longer distances
+        if corrected_distance > 50:
+            correction_factor = 1.0 + (corrected_distance - 50) * 0.001
+            corrected_distance *= correction_factor
         
-        if best_contour is None:
-            return 0, 0, 0.0
-            
-        x, y, w, h = cv2.boundingRect(best_contour)
-        return h, w, best_confidence
-    
-    def _correct_tilt_error(self, distances: List[float]) -> List[float]:
-        """
-        Correct for camera tilt errors
-        :param distances: List of estimated distances
-        :return: Corrected distances
-        """
-        # Simple linear correction based on expected tilt error
-        correction_factor = 1.0  # This should be calibrated
-        return [d * correction_factor for d in distances]
-    
-    def _correct_perspective_error(self, distances: List[float]) -> List[float]:
-        """
-        Correct for perspective distortion
-        :param distances: List of estimated distances
-        :return: Corrected distances
-        """
-        # Simple quadratic correction for perspective
-        correction_factor = 1.0  # This should be calibrated
-        return [d * (1 + correction_factor * (d/10)**2) for d in distances]
+        return corrected_distance
     
     def save_calibration(self, filepath: str) -> None:
         """
@@ -194,7 +145,8 @@ class AdvancedDistanceEstimator:
         :param filepath: Path to save calibration file
         """
         calibration_data = {
-            'camera_params': self.camera_params,
+            'camera_params': self.calibration_util.camera_matrix,
+            'dist_coeffs': self.calibration_util.dist_coeffs,
             'reference_objects': [
                 {
                     'name': obj.name,

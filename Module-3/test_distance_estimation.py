@@ -1,129 +1,95 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from advanced_distance_estimator import AdvancedDistanceEstimator, ReferenceObject
+from advanced_distance_estimator import AdvancedDistanceEstimator
 from calibration_utils import CalibrationUtility
 import os
 
 def test_camera_calibration():
     """Test camera calibration using chessboard pattern"""
-    # Create calibration utility
+    print("Testing camera calibration...")
     calib_util = CalibrationUtility()
     
-    # Load calibration images (replace with your calibration images)
+    # Load calibration images
     calibration_images = []
-    calibration_folder = 'calibration_images/'
-    if os.path.exists(calibration_folder):
-        for filename in os.listdir(calibration_folder):
-            if filename.endswith(('.jpg', '.png')):
-                img = cv2.imread(os.path.join(calibration_folder, filename))
-                if img is not None:
-                    calibration_images.append(img)
+    calibration_dir = 'calibration_images'
+    if os.path.exists(calibration_dir):
+        for img_file in os.listdir(calibration_dir):
+            if img_file.endswith(('.jpg', '.png')):
+                img_path = os.path.join(calibration_dir, img_file)
+                img = cv2.imread(img_path)
+                calibration_images.append(img)
     
-    if calibration_images:
-        # Calibrate camera
-        camera_params = calib_util.calibrate_camera(
-            calibration_images,
-            pattern_size=(9, 6),  # Standard chessboard pattern
-            square_size=0.025  # 2.5cm squares
-        )
-        print("Camera calibration successful!")
-        print("Camera parameters:", camera_params)
-    else:
-        print("No calibration images found. Using default parameters.")
-        camera_params = {
-            'focal_length': 1000,
-            'image_width': 1920,
-            'image_height': 1080,
-            'fov': 60
-        }
+    if not calibration_images:
+        print("No calibration images found. Using default camera parameters.")
+        return calib_util
     
-    return calib_util, camera_params
-
-def test_reference_object_calibration(calib_util: CalibrationUtility):
-    """Test reference object calibration"""
-    # Add standard reference objects
-    calib_util.add_reference_object(
-        name='standard_door',
-        actual_height=2.1,  # Standard door height
-        actual_width=0.9,   # Standard door width
-        confidence_threshold=0.7
+    # Calibrate camera
+    calib_util.calibrate_camera(
+        calibration_images,
+        pattern_size=(9, 6),
+        square_size=0.025  # 2.5cm squares
     )
     
-    calib_util.add_reference_object(
-        name='window',
-        actual_height=1.2,  # Standard window height
-        actual_width=1.0,   # Standard window width
-        confidence_threshold=0.7
-    )
-    
-    # Calibrate additional reference objects from images
-    reference_folder = 'reference_objects/'
-    if os.path.exists(reference_folder):
-        for filename in os.listdir(reference_folder):
-            if filename.endswith(('.jpg', '.png')):
-                img = cv2.imread(os.path.join(reference_folder, filename))
-                if img is not None:
-                    try:
-                        # Extract object name from filename
-                        name = os.path.splitext(filename)[0]
-                        calib_util.calibrate_reference_object(
-                            image=img,
-                            name=name,
-                            actual_height=2.1,  # Example height
-                            actual_width=0.9,   # Example width
-                            confidence_threshold=0.7
-                        )
-                        print(f"Successfully calibrated reference object: {name}")
-                    except ValueError as e:
-                        print(f"Failed to calibrate {filename}: {str(e)}")
+    print("Camera calibration successful!")
+    return calib_util
 
-def test_distance_estimation(estimator: AdvancedDistanceEstimator):
-    """Test distance estimation with sample images"""
-    test_folder = 'test_images/'
-    if not os.path.exists(test_folder):
-        print("No test images found.")
+def test_building_detection(estimator, test_image):
+    """Test building detection and distance estimation"""
+    print("\nTesting building detection and distance estimation...")
+    
+    # Estimate distance
+    results = estimator.estimate_distance(test_image)
+    
+    if not results['success']:
+        print(f"Error: {results['error']}")
+        print(f"Detected object: {results['building_name']}")
         return
     
-    for filename in os.listdir(test_folder):
-        if filename.endswith(('.jpg', '.png')):
-            img = cv2.imread(os.path.join(test_folder, filename))
-            if img is not None:
-                # Estimate distance
-                results = estimator.estimate_distance(
-                    image=img,
-                    method='size_based',
-                    use_multiple_references=True
-                )
-                
-                # Display results
-                print(f"\nResults for {filename}:")
-                print(f"Final distance: {results['final_distance']:.2f}m")
-                print(f"Confidence: {results['confidence']:.2f}")
-                print("Reference objects used:", results['reference_objects'])
-                
-                # Visualize
-                plt.figure(figsize=(10, 6))
-                plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                plt.title(f"Distance: {results['final_distance']:.2f}m (Confidence: {results['confidence']:.2f})")
-                plt.show()
+    # Display results
+    print(f"Building detected: {results['building_name']}")
+    print(f"Estimated distance: {results['distance']:.2f} meters")
+    print(f"Building height: {results['building_height']:.2f} meters")
+    print(f"Apparent height in pixels: {results['apparent_height_px']:.2f}")
+    print(f"Focal length in pixels: {results['focal_length_px']:.2f}")
+    
+    # Visualize results
+    plt.figure(figsize=(10, 6))
+    plt.subplot(121)
+    plt.imshow(cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB))
+    plt.title('Original Image')
+    
+    plt.subplot(122)
+    undistorted = cv2.undistort(
+        test_image,
+        estimator.calibration_util.camera_matrix,
+        estimator.calibration_util.dist_coeffs
+    )
+    plt.imshow(cv2.cvtColor(undistorted, cv2.COLOR_BGR2RGB))
+    plt.title('Undistorted Image')
+    
+    plt.tight_layout()
+    plt.show()
 
 def main():
+    """Main test function"""
     # Test camera calibration
-    calib_util, camera_params = test_camera_calibration()
-    
-    # Test reference object calibration
-    test_reference_object_calibration(calib_util)
+    calib_util = test_camera_calibration()
     
     # Create distance estimator
-    estimator = calib_util.create_estimator()
+    estimator = AdvancedDistanceEstimator(calib_util)
     
-    # Test distance estimation
-    test_distance_estimation(estimator)
-    
-    # Save calibration
-    calib_util.save_calibration('calibration_data.json')
-    print("\nCalibration data saved to 'calibration_data.json'")
+    # Test with sample images
+    test_dir = 'test_images'
+    if os.path.exists(test_dir):
+        for img_file in os.listdir(test_dir):
+            if img_file.endswith(('.jpg', '.png')):
+                print(f"\nTesting with image: {img_file}")
+                img_path = os.path.join(test_dir, img_file)
+                test_image = cv2.imread(img_path)
+                test_building_detection(estimator, test_image)
+    else:
+        print("No test images found. Please add images to the 'test_images' directory.")
 
 if __name__ == "__main__":
     main() 

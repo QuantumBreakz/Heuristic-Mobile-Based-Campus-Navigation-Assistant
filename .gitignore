@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+Module-1/imagedata/
+Module-2/models/
+Module-3/calibration_images/
+Module-3/reference_objects/
+Module-3/test_images/
+Module-4/public/
+Module-4/assets/
+
+# Large files
+*.pth
+*.pt
+*.h5
+*.pkl
+*.npy
+*.npz
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp 

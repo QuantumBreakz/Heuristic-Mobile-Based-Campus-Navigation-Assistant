@@ -193,8 +193,8 @@ If you use this project in your research, please cite:
 ```bibtex
 @software{heuristic_campus_navigation,
   title = {Heuristic Mobile-Based Campus Navigation Assistant},
-  author = {Your Name},
-  year = {2024},
+  author = {Ali Ahmed},
+  year = {2025},
   publisher = {GitHub},
   url = {https://github.com/QuantumBreakz/Heuristic-Mobile-Based-Campus-Navigation-Assistant}
 }

@@ -1,29 +1,58 @@
 # Module 1: Image Collection & Dataset Preparation
 
-## Dataset Overview
-- Total Images: 179
-- Buildings Covered: 12
-- Image Format: JPEG/PNG
-- Resolution: 1920x1080
+## Overview
+This module focuses on collecting and preparing the dataset for campus building recognition. It includes image collection, annotation, and dataset organization.
 
-## Annotation Process
-1. **Manual Annotation**:
-   - Used LabelImg for bounding box annotation
-   - Each building labeled with its official name
-   - Multiple angles captured for each building
+## Directory Structure
+```
+Module-1/
+├── images/              # Raw building images
+├── annotations/         # Annotation files
+├── dataset_description.txt
+└── README.md
+```
 
-2. **Annotation Format**:
-   ```csv
-   image_name,label
-   block_a_1.jpg,Block A: Admin Building
-   block_b_1.jpg,Block B: Civil Department
+## Dataset Details
+- Total Images: 50-75 (5-15 images per building)
+- Image Format: JPEG (.jpg) or PNG (.png)
+- Resolution: Minimum 1920x1080
+- Buildings Covered:
+  - Main Academic Block
+  - Central Library
+  - Main Auditorium
+  - Student Cafeteria
+  - Sports Complex
+
+## Annotation Format
+Annotations are stored in `annotations.csv` with the following columns:
+- image_path: Path to the image file
+- building_id: Unique identifier for the building
+- building_name: Name of the building
+- x_min, y_min: Top-left coordinates of bounding box
+- x_max, y_max: Bottom-right coordinates of bounding box
+
+## Usage
+1. Place raw images in the `images/` directory
+2. Run annotation tool:
+   ```bash
+   python annotate.py
+   ```
+3. Generate dataset description:
+   ```bash
+   python generate_description.py
    ```
 
-3. **Challenges Addressed**:
-   - Varying lighting conditions
-   - Occlusions (trees, people)
-   - Different viewing angles
-   - Weather conditions
+## Requirements
+- Python 3.8+
+- OpenCV
+- LabelImg
+- Pandas
+
+## Challenges
+- Varying lighting conditions
+- Building obstructions
+- Perspective variations
+- Weather conditions
 
 ## Data Augmentation
 Applied the following augmentations:
@@ -32,17 +61,6 @@ Applied the following augmentations:
 - Contrast adjustment (±20%)
 - Horizontal flip
 - Random crop
-
-## Directory Structure
-```
-Module-1/
-├── images/                # Original images
-├── augmented_images/      # Augmented images
-├── annotations/           # Annotation files
-│   └── annotation.csv    # Main annotation file
-├── dataset_description.txt
-└── README.md
-```
 
 ## Usage
 1. **View Dataset**:

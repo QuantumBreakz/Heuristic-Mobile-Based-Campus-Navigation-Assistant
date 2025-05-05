@@ -1,5 +1,68 @@
 # Module 2: Landmark Recognition Model
 
+## Overview
+This module implements a deep learning model for recognizing campus buildings from images. It uses a pre-trained ResNet50 model fine-tuned on our campus building dataset.
+
+## Directory Structure
+```
+Module-2/
+├── models/             # Trained model files
+├── notebooks/          # Jupyter notebooks
+├── src/               # Source code
+│   ├── preprocessing/
+│   ├── training/
+│   └── evaluation/
+├── requirements.txt
+└── README.md
+```
+
+## Model Details
+- Base Model: ResNet50
+- Input Size: 224x224
+- Output Classes: 5 (one per building)
+- Training Data: 80% of dataset
+- Validation Data: 20% of dataset
+
+## Performance Metrics
+- Accuracy: >90%
+- Precision: >0.85
+- Recall: >0.85
+- F1-Score: >0.85
+
+## Usage
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Preprocess images:
+   ```bash
+   python src/preprocessing/preprocess.py
+   ```
+
+3. Train model:
+   ```bash
+   python src/training/train.py
+   ```
+
+4. Evaluate model:
+   ```bash
+   python src/evaluation/evaluate.py
+   ```
+
+## Requirements
+- Python 3.8+
+- PyTorch 1.9+
+- torchvision
+- numpy
+- pandas
+- matplotlib
+- scikit-learn
+
+## Model Files
+- `resnet50_multiclass_building_detection_full.pth`: Full trained model
+- `resnet50_multiclass_building_detection_quantized.pth`: Quantized model for mobile deployment
+
 ## Model Overview
 - Architecture: ResNet50
 - Pretrained Weights: ImageNet
@@ -88,40 +151,6 @@ def process_image(image):
             'confidence': detection['confidence']
         }
 ```
-
-## Directory Structure
-```
-Module-2/
-├── model/                    # Trained models
-│   ├── resnet50_multiclass_building_detection_full.pth
-│   └── resnet50_quantized.pth
-├── notebooks/                # Jupyter notebooks
-│   ├── model_training.ipynb
-│   └── model_evaluation.ipynb
-├── api/                     # API implementation
-│   ├── app.py
-│   └── requirements.txt
-├── utils/                   # Utility scripts
-│   ├── data_loader.py
-│   └── model_utils.py
-└── README.md
-```
-
-## Usage
-1. **Train Model**:
-   ```bash
-   python train.py --epochs 50 --batch_size 32
-   ```
-
-2. **Evaluate Model**:
-   ```bash
-   python evaluate.py --model_path model/resnet50_multiclass_building_detection_full.pth
-   ```
-
-3. **Run API**:
-   ```bash
-   python api/app.py
-   ```
 
 ## Notes
 - Model optimized for mobile deployment

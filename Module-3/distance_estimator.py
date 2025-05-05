@@ -166,4 +166,4 @@ def calibrate_camera(images: List[np.ndarray],
         'image_width': gray.shape[1],
         'image_height': gray.shape[0],
         'fov': fov_x_deg
-    } 
+    }

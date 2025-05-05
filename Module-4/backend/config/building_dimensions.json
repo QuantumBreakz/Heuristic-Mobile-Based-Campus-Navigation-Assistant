@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Main Building",
+    "height": 20.0,
+    "width": 50.0,
+    "depth": 30.0,
+    "floors": 5,
+    "year_built": 1960,
+    "architectural_style": "Modern",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "departments": ["Administration", "Computer Science", "Mathematics"],
+    "features": ["Main entrance", "Library", "Auditorium"]
+  },
+  {
+    "name": "Science Center",
+    "height": 25.0,
+    "width": 60.0,
+    "depth": 40.0,
+    "floors": 6,
+    "year_built": 1975,
+    "architectural_style": "Brutalist",
+    "latitude": 40.7138,
+    "longitude": -74.0070,
+    "departments": ["Physics", "Chemistry", "Biology"],
+    "features": ["Laboratories", "Observatory", "Research Center"]
+  },
+  {
+    "name": "Library",
+    "height": 15.0,
+    "width": 40.0,
+    "depth": 25.0,
+    "floors": 4,
+    "year_built": 1985,
+    "architectural_style": "Contemporary",
+    "latitude": 40.7148,
+    "longitude": -74.0080,
+    "departments": ["Library Sciences", "Information Technology"],
+    "features": ["Reading rooms", "Study areas", "Digital resources"]
+  }
+] 
